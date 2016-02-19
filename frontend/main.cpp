@@ -186,7 +186,7 @@ int build(option& opt, istream_type& is)
     typedef std::basic_string<char_type> string_type;
     typedef simstring::ngram_generator ngram_generator_type;
     typedef simstring::writer_base<string_type, ngram_generator_type> writer_type;
-    
+
     std::ostream& os = std::cout;
     std::ostream& es = std::cerr;
 
@@ -220,8 +220,23 @@ int build(option& opt, istream_type& is)
             break;
         }
 
+        string_type valuestr;
+        std::getline(is, valuestr);
+        if (is.eof()) {
+            break;
+        }
+
+        std::basic_stringstream<char_type> ss(valuestr);
+        uint64_t value;
+        ss >> value;
+        if (ss.fail()) {
+          es << "ERROR: cannot parse '" << valuestr.c_str() << "'" << std::endl;
+          return 1;
+        }
+
+
         // Insert the string.
-        if (!db.insert(line)) {
+        if (!db.insert(line, value)) {
             es << "ERROR: " << db.error() << std::endl;
             return 1;
         }
@@ -270,7 +285,7 @@ template <class char_type, class istream_type, class ostream_type>
 int retrieve(option& opt, istream_type& is, ostream_type& os)
 {
     typedef std::basic_string<char_type> string_type;
-    typedef std::vector<string_type> strings_type;
+    typedef std::vector<uint64_t> values_type;
     typedef simstring::reader reader_type;
 
     std::ostream& es = std::cerr;
@@ -303,7 +318,7 @@ int retrieve(option& opt, istream_type& is, ostream_type& os)
         }
 
         // Issue a query.
-        strings_type xstrs;
+        values_type xstrs;
         clock_t clk = std::clock();
         db.retrieve(line, opt.measure, opt.threshold, std::back_inserter(xstrs));
         clock_t elapsed = (std::clock() - clk);
@@ -321,7 +336,7 @@ int retrieve(option& opt, istream_type& is, ostream_type& os)
             }
 
             // Output the retrieved strings.
-            typename strings_type::const_iterator it;
+            typename values_type::const_iterator it;
             for (it = xstrs.begin();it != xstrs.end();++it) {
                 os << os.widen('\t') << *it << std::endl;
             }
@@ -358,7 +373,7 @@ int main(int argc, char *argv[])
 {
     // Parse the command-line options.
     option_parser opt;
-    try { 
+    try {
         int arg_used = opt.parse(argv, argc);
     } catch (const optparse::unrecognized_option& e) {
         std::cerr << "ERROR: unrecognized option: " << e.what() << std::endl;
@@ -371,7 +386,7 @@ int main(int argc, char *argv[])
     // Change the locale of wcin and wcout if necessary.
     if (opt.code == option::CC_WCHAR) {
         std::ios_base::sync_with_stdio(false);
-        std::locale::global(std::locale("")); 
+        std::locale::global(std::locale(""));
         std::wcout.imbue(std::locale(""));
         std::wcin.imbue(std::locale(""));
     }

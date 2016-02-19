@@ -57,7 +57,7 @@
 #define SIMSTRING_MINOR_VERSION  1
 #define SIMSTRING_STREAM_VERSION 2
 
-/** 
+/**
  * \addtogroup api SimString C++ API
  * @{
  *
@@ -282,7 +282,7 @@ protected:
             // Put associations: n-gram -> values.
             typename hashdb_type::const_iterator it;
             for (it = index.begin();it != index.end();++it) {
-                // Put an association from an n-gram to its values. 
+                // Put an association from an n-gram to its values.
                 dbw.put(
                     it->first.c_str(),
                     sizeof(char_type) * it->first.length(),
@@ -321,19 +321,19 @@ template <
     class ngram_generator_tmpl = ngram_generator
 >
 class writer_base :
-    public ngramdb_writer_base<string_tmpl, uint32_t, ngram_generator_tmpl>
+    public ngramdb_writer_base<string_tmpl, uint64_t, ngram_generator_tmpl>
 {
 public:
     /// The type representing a string.
     typedef string_tmpl string_type;
     /// The type of values associated with key strings.
-    typedef uint32_t value_type;
+    typedef uint64_t value_type;
     /// The function type for generating n-grams from a key string.
     typedef ngram_generator_tmpl ngram_generator_type;
     /// The type representing a character.
     typedef typename string_type::value_type char_type;
     // The type of the base class.
-    typedef ngramdb_writer_base<string_tmpl, uint32_t, ngram_generator_tmpl> base_type;
+    typedef ngramdb_writer_base<string_tmpl, uint64_t, ngram_generator_tmpl> base_type;
 
 protected:
     /// The base name of the database.
@@ -435,11 +435,8 @@ public:
      *  @return bool        \c true if the string is successfully inserted,
      *                      \c false otherwise.
      */
-    bool insert(const string_type& str)
+    bool insert(const string_type& str, uint64_t value)
     {
-        // This will be the offset address to access the key string.
-        value_type off = (value_type)(std::streamoff)m_ofs.tellp();
-
         // Write the key string to the master file.
         m_ofs.write(reinterpret_cast<const char*>(str.c_str()), sizeof(char_type) * (str.length()+1));
         if (m_ofs.fail()) {
@@ -449,7 +446,7 @@ public:
         ++m_num_entries;
 
         // Insert the n-grams of the key string to the database.
-        return base_type::insert(str, off);
+        return base_type::insert(str, value);
     }
 
 protected:
@@ -506,7 +503,7 @@ class ngramdb_reader_base
 public:
     /// The type of a value.
     typedef value_tmpl value_type;
-    
+
 protected:
     // An inverted list of SIDs.
     struct inverted_list_type
@@ -515,7 +512,7 @@ protected:
         const value_type* values;
 
         friend bool operator<(
-            const inverted_list_type& x, 
+            const inverted_list_type& x,
             const inverted_list_type& y
             )
         {
@@ -795,13 +792,13 @@ protected:
  *  which maintains associations between strings and string IDs.
  */
 class reader
-    : public ngramdb_reader_base<uint32_t>
+    : public ngramdb_reader_base<uint64_t>
 {
 public:
     /// The type of an n-gram generator.
     typedef ngram_generator ngram_generator_type;
     /// The type of the base class.
-    typedef ngramdb_reader_base<uint32_t> base_type;
+    typedef ngramdb_reader_base<uint64_t> base_type;
 
 protected:
     int m_ngram_unit;
@@ -848,7 +845,7 @@ public:
         ifs.seekg(0, std::ios_base::end);
         size_t size = (size_t)ifs.tellg();
         ifs.seekg(0, std::ios_base::beg);
-        
+
         // Read the image of the master file.
         m_strings.resize(size);
         ifs.read(&m_strings[0], size);
@@ -983,8 +980,7 @@ public:
         typename base_type::results_type::const_iterator it;
         const char* strings = &m_strings[0];
         for (it = results.begin();it != results.end();++it) {
-            const char_type* xstr = reinterpret_cast<const char_type*>(strings + *it);
-            *ins = xstr;
+            *ins = *it;
         }
     }
 
