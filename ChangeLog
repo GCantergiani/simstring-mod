@@ -1,3 +1,10 @@
+2016-02-19  Keigo Imai  <keigo.imai at gmail.com>
+	* "Associated-value" mod
+	- insert(str, val) inserts an associated value *val*, not the *str* itself, into the DB.
+	- Similarly, retrieve(query) returns values associated to the strings, not the strings themselves.
+	- Frontend reads two lines (a string first, then the associated integer value, and it returns associated integers for strings found by a query.
+	- Associated values are 64-bit integer.
+
 2011-02-xx  Naoaki Okazaki  <okazaki at chokkan org>
 
 	* SimString 1.1:
