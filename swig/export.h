@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-/** 
+/**
  * \addtogroup swig_interface SimString SWIG interface
  * @{
  *
@@ -43,7 +43,7 @@ public:
      *  This function creates an instance of SimString database writer
      *  for creating a new database. If this function failes to open
      *  the database, it throws SWIG_IOError.
-     *  
+     *
      *  @param  filename    The database filename.
      *  @param  n           The unit of character n-grams.
      *  @param  be          \c true to represent a begin and end of strings
@@ -53,14 +53,14 @@ public:
      *  @throw  SWIG_IOError
      */
     writer(const char *filename, int n = 3, bool be = false, bool unicode = false);
-    
+
     /**
      * Destructs the writer.
      *  Destructing a writer object automatically closes the database.
      *  @throw  SWIG_IOError
      */
     virtual ~writer();
-    
+
     /**
      * Inserts a string into the database.
      *  @param  string      A string to be inserted to the database. This
@@ -70,8 +70,8 @@ public:
      *                      UTF-8, and converts it into a \c wchar_t string.
      *  @throw  SWIG_IOError
      */
-    void insert(const char *string);
-    
+    void insert(const char *string, unsigned long value);
+
     /**
      * Closes the database.
      *  This function flushes and closes the database. If this function failes
@@ -113,7 +113,7 @@ public:
      *  are no smaller than a threshold. Before calling this function, set the
      *  similarity measure and threshold to \ref measure and \ref threshold
      *  attributes of the reader object.
-     *  
+     *
      *  @param  query       The query string. This argument must be a
      *                      null-terminated byte stream. If the database was
      *                      created with Unicode mode, this function assumes
@@ -125,15 +125,15 @@ public:
      *  @see    measure     The similarity function used by this function.
      *  @see    threshold   The similarity value used by this function.
      */
-    std::vector<std::string> retrieve(const char *query);
-    
+    std::vector<unsigned long> retrieve(const char *query);
+
     /**
      * Checks the existence of a string that is similar to the query string.
      *  This function examines the existence of a string whose similarity with
      *  the query string is no smaller than a threshold. Before calling this
      *  function, set the similarity measure and threshold to \ref measure and
      *  \ref threshold attributes of the reader object.
-     *  
+     *
      *  @param  query       The query string. This argument must be a
      *                      null-terminated byte stream. If the database was
      *                      created with Unicode mode, this function assumes

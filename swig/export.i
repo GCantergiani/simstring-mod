@@ -9,7 +9,7 @@
 %include "exception.i"
 
 namespace std {
-    %template(StringVector) vector<std::string>;
+    %template(LongVector) vector<unsigned long>;
 }
 
 %exception {

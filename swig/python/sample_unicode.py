@@ -15,7 +15,7 @@ import simstring
 db = simstring.writer('sample_unicode.db', 3, False, True)
 
 # Write a string, and close the database.
-db.insert('スパゲティ')
+db.insert('スパゲティ', 12345678901234)
 db.close()
 
 
@@ -27,8 +27,8 @@ db.measure = simstring.cosine
 db.threshold = 0.6
 
 # Use an 8-bit string encoded in UTF-8.
-print ' '.join(db.retrieve('スパゲティー'))
+print ' '.join([str(i) for i in db.retrieve('スパゲティー')])
 
 # Convert a Unicode object into an UTF-8 query string.
-print ' '.join(db.retrieve(u'スパゲティー'.encode('utf-8')))
+print ' '.join([str(i) for i in db.retrieve(u'スパゲティー'.encode('utf-8'))])
 

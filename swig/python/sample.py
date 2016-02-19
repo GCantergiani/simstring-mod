@@ -4,8 +4,8 @@ import simstring
 
 # Create a SimString database with two person names.
 db = simstring.writer('sample.db')
-db.insert('Barack Hussein Obama II')
-db.insert('James Gordon Brown')
+db.insert('Barack Hussein Obama II', 1234)
+db.insert('James Gordon Brown', 5678)
 db.close()
 
 

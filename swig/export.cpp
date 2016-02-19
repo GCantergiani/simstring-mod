@@ -27,7 +27,7 @@ bool iconv_convert(iconv_t cd, const source_type& src, destination_type& dst)
 {
     typedef typename source_type::value_type source_char_type;
     typedef typename destination_type::value_type destination_char_type;
-    
+
     const char *inbuf = reinterpret_cast<const char *>(src.c_str());
     size_t inbytesleft = sizeof(source_char_type) * src.length();
     while (inbytesleft > 0) {
@@ -103,7 +103,7 @@ writer::~writer()
     if (m_unicode) {
         uwriter_type* dbw = reinterpret_cast<uwriter_type*>(m_dbw);
     ngram_generator_type* gen = reinterpret_cast<ngram_generator_type*>(m_gen);
-    
+
     dbw->close();
     if (dbw->fail()) {
         std::string message = dbw->error();
@@ -117,7 +117,7 @@ writer::~writer()
     } else {
         writer_type* dbw = reinterpret_cast<writer_type*>(m_dbw);
     ngram_generator_type* gen = reinterpret_cast<ngram_generator_type*>(m_gen);
-    
+
     dbw->close();
     if (dbw->fail()) {
         std::string message = dbw->error();
@@ -130,7 +130,7 @@ writer::~writer()
     }
 }
 
-void writer::insert(const char *string)
+void writer::insert(const char *string, uint64_t value)
 {
     if (m_unicode) {
         uwriter_type* dbw = reinterpret_cast<uwriter_type*>(m_dbw);
@@ -140,14 +140,14 @@ void writer::insert(const char *string)
     iconv_convert(cd, std::string(string), str);
     iconv_close(cd);
 
-    dbw->insert(str);
+    dbw->insert(str, (uint64_t)value);
     if (dbw->fail()) {
             throw std::runtime_error(dbw->error());
     }
 
     } else {
         writer_type* dbw = reinterpret_cast<writer_type*>(m_dbw);
-    dbw->insert(string);
+        dbw->insert(string, (uint64_t)value);
     if (dbw->fail()) {
             throw std::runtime_error(dbw->error());
     }
@@ -232,47 +232,38 @@ void retrieve_iconv(
     )
 {
     typedef std::basic_string<char_type> string_type;
-    typedef std::vector<string_type> strings_type;
+    typedef std::vector<uint64_t> values_type;
 
     // Translate the character encoding of the query string from UTF-8 to the target encoding.
     string_type qstr;
     iconv_t fwd = iconv_open(encoding, "UTF-8");
     iconv_convert(fwd, query, qstr);
     iconv_close(fwd);
-    
-    strings_type xstrs;
+
+    values_type retval;
     switch (measure) {
     case exact:
-        dbr.retrieve<simstring::measure::exact>(qstr, threshold, std::back_inserter(xstrs));
+        dbr.retrieve<simstring::measure::exact>(qstr, threshold, ins);
         break;
     case dice:
-        dbr.retrieve<simstring::measure::dice>(qstr, threshold, std::back_inserter(xstrs));
+        dbr.retrieve<simstring::measure::dice>(qstr, threshold, ins);
         break;
     case cosine:
-        dbr.retrieve<simstring::measure::cosine>(qstr, threshold, std::back_inserter(xstrs));
+        dbr.retrieve<simstring::measure::cosine>(qstr, threshold, ins);
         break;
     case jaccard:
-        dbr.retrieve<simstring::measure::jaccard>(qstr, threshold, std::back_inserter(xstrs));
+        dbr.retrieve<simstring::measure::jaccard>(qstr, threshold, ins);
         break;
     case overlap:
-        dbr.retrieve<simstring::measure::overlap>(qstr, threshold, std::back_inserter(xstrs));
+        dbr.retrieve<simstring::measure::overlap>(qstr, threshold, ins);
         break;
     }
-
-    // Translate back the character encoding of retrieved strings into UTF-8.
-    iconv_t bwd = iconv_open("UTF-8", encoding);
-    for (typename strings_type::const_iterator it = xstrs.begin();it != xstrs.end();++it) {
-        std::string dst;
-    iconv_convert(bwd, *it, dst);
-    *ins = dst;
-    }
-    iconv_close(bwd);
 }
 
-std::vector<std::string> reader::retrieve(const char *query)
+std::vector<unsigned long> reader::retrieve(const char *query)
 {
     reader_type& dbr = *reinterpret_cast<reader_type*>(m_dbr);
-    std::vector<std::string> ret;
+    std::vector<unsigned long> ret;
 
     switch (dbr.char_size()) {
     case 1:
@@ -292,7 +283,7 @@ std::vector<std::string> reader::retrieve(const char *query)
 bool reader::check(const char *query)
 {
     reader_type& dbr = *reinterpret_cast<reader_type*>(m_dbr);
-    
+
     if (dbr.char_size() == 1) {
         std::string qstr = query;
         return dbr.check(qstr, translate_measure(this->measure), this->threshold);
@@ -309,7 +300,7 @@ bool reader::check(const char *query)
         iconv_close(fwd);
         return dbr.check(qstr, translate_measure(this->measure), this->threshold);
     }
-    
+
     return false;
 }
 
