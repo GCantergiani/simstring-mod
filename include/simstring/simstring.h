@@ -437,12 +437,6 @@ public:
      */
     bool insert(const string_type& str, uint64_t value)
     {
-        // Write the key string to the master file.
-        m_ofs.write(reinterpret_cast<const char*>(str.c_str()), sizeof(char_type) * (str.length()+1));
-        if (m_ofs.fail()) {
-            this->m_error << "Failed to write a string to the master file.";
-            return false;
-        }
         ++m_num_entries;
 
         // Insert the n-grams of the key string to the database.
@@ -978,7 +972,6 @@ public:
         base_type::overlapjoin<measure_type>(ngrams, alpha, results, false);
 
         typename base_type::results_type::const_iterator it;
-        const char* strings = &m_strings[0];
         for (it = results.begin();it != results.end();++it) {
             *ins = *it;
         }
